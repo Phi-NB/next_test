@@ -1,0 +1,9 @@
+export enum USER_ROLE {
+  ROOT_ADMIN = "ROOT_ADMIN",
+  ROOT_REVIEWER = "ROOT_REVIEWER",
+  ROOT_TESTER = "ROOT_TESTER",
+  USER = "USER",
+  PUBLISHER = "PUBLISHER",
+  GUEST = "GUEST",
+}
+export type IUserRole = `${USER_ROLE}`;
