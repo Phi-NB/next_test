@@ -10,7 +10,7 @@ export default function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
-  if (REQUEST_METHOD.GET) {
+  if (REQUEST_METHOD.POST) {
     return getListInforUser(req, res);
   }
 

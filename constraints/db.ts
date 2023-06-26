@@ -15,12 +15,16 @@ export enum REQUEST_METHOD {
 
 export enum MESSAGE_ERROR {
   CONNECT_ERROR_DB = "Connecting to database failed!",
+  DISCONNECT_ERROR_DB = "Connecting to database failed!",
   DEFAULT = "404",
   NOT_FOUND = "Not found!",
   NOT_FOUND_DATA_INPUT = "No insert data found!",
   GET_LIST_INFOR_USER = "Get list infor user failed.",
+  VALIDATE = "Error validate",
+  GET_LIST_INFOR_CITIZEN_USER = "Get list infor citizen users",
 }
 
 export enum MESSAGE_SUCCESS {
   GET_LIST_INFOR_USER = "Get list infor user successfuly.",
+  GET_LIST_INFOR_CITIZEN_USER = "Get list infor user successfuly.",
 }
