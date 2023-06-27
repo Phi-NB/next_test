@@ -22,9 +22,20 @@ export enum MESSAGE_ERROR {
   GET_LIST_INFOR_USER = "Get list infor user failed.",
   VALIDATE = "Error validate",
   GET_LIST_INFOR_CITIZEN_USER = "Get list infor citizen users",
+  USER_CREDENTIALS_NOT_FOUND = "User credentials not found.",
+  TOKEN_EXPIRED = "Token expired.",
+  INVALID_CITIZEN_ACTIVE = "Invalid active citizen.",
+  VALIDATE_ACCOUNT = "Invalid credentials.",
+  NOT_FOUND_USER = "Not found user!",
+  EXPECTATION_FAILED = "Expectation Failed",
+  USER_CREDENTIALS_INVALID = "User credentials are invalid.",
+  TOKEN_INVALID = "Token invalid",
 }
 
 export enum MESSAGE_SUCCESS {
   GET_LIST_INFOR_USER = "Get list infor user successfuly.",
   GET_LIST_INFOR_CITIZEN_USER = "Get list infor user successfuly.",
+  VALIDATE_ACCOUNT = "Validate account successfully.",
 }
+
+export enum TYPE_FILTER {}

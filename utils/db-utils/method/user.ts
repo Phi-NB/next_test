@@ -10,6 +10,7 @@ import { UserSchema } from "../../../models/user";
 import { TYPE_CHART } from "../../../interfaces/enum";
 import Joi from "joi";
 import { IRequestGetDataUserBody } from "../../../interfaces/user/request";
+import { middlewareAuth } from "../../midderware";
 
 export const getListInforUser = async (
   req: NextApiRequest,
@@ -43,6 +44,12 @@ export const getListInforUser = async (
     console.log(error);
     res.status(500).json({ message: MESSAGE_ERROR.CONNECT_ERROR_DB });
     return;
+  }
+
+  try {
+    await middlewareAuth(req, res);
+  } catch (error) {
+    console.log(error);
   }
 
   try {
@@ -118,8 +125,6 @@ export const getListInforUser = async (
     const listAmountVector = [];
     const listTimeVector = [];
 
-    console.log(totalUsers);
-
     totalUsers.reduce((accumulator, current) => {
       listAmountVector.push(accumulator + current.count);
       switch (body.type) {
@@ -177,6 +182,14 @@ export const getListInforCitizenUser = async (
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: MESSAGE_ERROR.CONNECT_ERROR_DB });
+      return;
+    }
+
+    try {
+      await disconnectDatabase();
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ message: MESSAGE_ERROR.DISCONNECT_ERROR_DB });
       return;
     }
   } catch (error) {
