@@ -1,6 +1,7 @@
 import { isUndefined } from "lodash";
 import {
   COLLECTION,
+  DATABASE,
   MESSAGE_ERROR,
   MESSAGE_SUCCESS,
 } from "../../../constraints/db";
@@ -9,22 +10,23 @@ import { IUserRole, USER_ROLE } from "../../../interfaces/enum";
 import { IAccountCitizen, IAccountInfo, validateAccessToken } from "../../auth";
 import { checkExistsObjectId, dataCheck } from "../../check";
 import { NextApiRequest, NextApiResponse } from "next";
-import mongoose from "mongoose";
+import { Connection } from "mongoose";
 import { UserSchema } from "../../../models/user";
 import { checkUserDataNeedUpdate, createSendData } from "../../user";
 import dayjs from "dayjs";
 import { StatusCodes } from "http-status-codes";
 import { singleResponse } from "../../response";
+import { connectDatabase, disconnectDatabase } from "..";
 
 export const validateAccount = async (
-  body: IValidateAccountBody,
-  req?: NextApiRequest,
-  res?: NextApiResponse
+  body: IValidateAccountBody
 ): Promise<any> => {
   try {
     let roles: IUserRole[] = [USER_ROLE.USER];
     let account = null;
+    let doc: any;
     const isUser = body.accessToken;
+    let db: Connection;
 
     let userDoc = null;
     if (isUser) {
@@ -32,61 +34,38 @@ export const validateAccount = async (
         account = await validateAccessToken(body.accessToken);
       } catch (error) {
         console.log(error);
+        return;
       }
     }
 
-    const modelUser =
-      mongoose.models.users || mongoose.model(COLLECTION.USER, UserSchema);
+    db = await connectDatabase(DATABASE.AUTH);
+
+    const user = db.models.users || db.model(COLLECTION.USER, UserSchema);
 
     if (!account) {
       throw new Error(MESSAGE_ERROR.VALIDATE_ACCOUNT);
     }
 
-    const sendData = createSendData(account);
-
-    console.log("dfjlaskjdflksajdlfkasjdlfj", sendData);
+    // const sendData = createSendData(account);
 
     if (isUser) {
       try {
-        const docs = await checkExistsObjectId(
-          modelUser,
-          sendData.id,
-          MESSAGE_ERROR.NOT_FOUND_USER,
-          true
-        );
-
+        const docs = await user.aggregate([
+          { $match: { _id: account.activeCitizen?.saId } },
+        ]);
         const doc = docs[0];
+
         if (!isUndefined(doc?.roles)) {
-          userDoc = doc.toJSON();
           roles = doc.roles;
-          if (checkUserDataNeedUpdate(sendData, doc?.toObject())) {
-            await modelUser.updateOne(
-              { _id: sendData.id },
-              { $set: sendData },
-              { upsert: true }
-            );
-          }
         }
       } catch (error) {}
     }
 
-    if (userDoc !== null) {
-      if (
-        !dayjs(userDoc?.last_login).isSame(dayjs(), "day") ||
-        isUndefined(userDoc?.last_login)
-      ) {
-        const eventValue = {
-          id: sendData.id,
-          last_login: new Date(),
-          version: userDoc.version + 1,
-        };
-        await modelUser.updateOne(
-          { _id: sendData.id },
-          { $set: eventValue },
-          { upsert: true }
-        );
-      }
+    if (!account) {
+      throw new Error(MESSAGE_ERROR.VALIDATE_ACCOUNT);
     }
+
+    await disconnectDatabase(db);
 
     return {
       statusCode: StatusCodes.OK,

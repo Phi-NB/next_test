@@ -1,6 +1,11 @@
 export const DB_URI = process.env.DB_URI;
 export const DB_URI_PRODUCTION = `mongodb://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_NETWORK}:${process.env.DB_PORT}/${process.env.DB_NAME}${process.env.DB_OPTION}`;
 
+export enum DATABASE {
+  AUTH = "auth",
+  USER_STATIC = "user-static",
+}
+
 export enum COLLECTION {
   USER = "users",
   QUETS = "quests",
@@ -30,6 +35,7 @@ export enum MESSAGE_ERROR {
   EXPECTATION_FAILED = "Expectation Failed",
   USER_CREDENTIALS_INVALID = "User credentials are invalid.",
   TOKEN_INVALID = "Token invalid",
+  ROLE_INVALID = "Role invalid",
 }
 
 export enum MESSAGE_SUCCESS {

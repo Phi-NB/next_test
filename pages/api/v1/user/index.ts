@@ -13,6 +13,5 @@ export default function handler(
   if (REQUEST_METHOD.POST) {
     return getListInforUser(req, res);
   }
-
   return;
 }

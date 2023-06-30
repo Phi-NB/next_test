@@ -1,21 +1,24 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import {
   COLLECTION,
+  DATABASE,
   MESSAGE_ERROR,
   MESSAGE_SUCCESS,
 } from "../../../constraints/db";
 import { connectDatabase, disconnectDatabase } from "../index";
-import mongoose from "mongoose";
+import { Connection } from "mongoose";
 import { UserSchema } from "../../../models/user";
-import { TYPE_CHART } from "../../../interfaces/enum";
+import { TYPE_CHART, USER_ROLE } from "../../../interfaces/enum";
 import Joi from "joi";
 import { IRequestGetDataUserBody } from "../../../interfaces/user/request";
-import { middlewareAuth } from "../../midderware";
+import { middlewareAuth, middlewareCheckRole } from "../../midderware";
+import { IResponseValidateAccount } from "../../../interfaces/auth/response";
 
 export const getListInforUser = async (
   req: NextApiRequest,
   res: NextApiResponse
 ) => {
+  let db: Connection;
   const body = req.body as IRequestGetDataUserBody;
   const arrayTypes = Object.values(TYPE_CHART).reduce(
     (acc: any[], curr, index, arr) => {
@@ -24,6 +27,7 @@ export const getListInforUser = async (
     },
     []
   );
+  let responseValidateAccount: IResponseValidateAccount | void;
 
   const schema = Joi.object({
     type: Joi.string()
@@ -39,7 +43,7 @@ export const getListInforUser = async (
   }
 
   try {
-    await connectDatabase();
+    db = await connectDatabase(DATABASE.AUTH);
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: MESSAGE_ERROR.CONNECT_ERROR_DB });
@@ -47,20 +51,40 @@ export const getListInforUser = async (
   }
 
   try {
-    await middlewareAuth(req, res);
+    responseValidateAccount = await middlewareAuth(req, res);
   } catch (error) {
-    console.log(error);
+    res.status(500).json({ message: MESSAGE_ERROR.VALIDATE, status: false });
   }
 
   try {
-    const user =
-      mongoose.models.users || mongoose.model(COLLECTION.USER, UserSchema);
+    if (responseValidateAccount instanceof Object) {
+      if (responseValidateAccount.status) {
+        const role = middlewareCheckRole(
+          res,
+          responseValidateAccount.currentAccount.roles,
+          [USER_ROLE.ROOT_ADMIN]
+        );
+      }
+    } else {
+      res
+        .status(500)
+        .json({ message: MESSAGE_ERROR.ROLE_INVALID, status: false });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: MESSAGE_ERROR.ROLE_INVALID, status: false });
+  }
+
+  try {
+    const user = db.models.users || db.model(COLLECTION.USER, UserSchema);
 
     const totalAccount = await user.aggregate([
       { $match: { email: { $ne: null } } },
       { $group: { _id: "$email" } },
       { $group: { _id: null, count: { $sum: 1 } } },
     ]);
+
     const currentDate = new Date();
     currentDate.setUTCHours(0, 0, 0, 0);
 
@@ -87,16 +111,6 @@ export const getListInforUser = async (
         );
       }
     }
-    // console.log(startDate, currentDate);
-
-    // const dates = [];
-    // const currentDateCopy = new Date(startDate);
-    // while (currentDateCopy <= currentDate) {
-    //   dates.push(new Date(currentDateCopy).getDate());
-    //   currentDateCopy.setDate(currentDateCopy.getDate() + 1);
-    // }
-
-    // console.log(startDate, currentDate);
 
     const totalUsers = await user.aggregate([
       {
@@ -105,7 +119,6 @@ export const getListInforUser = async (
           created_at: { $gte: startDate, $lt: currentDate },
         },
       },
-      // { $group: { _id: "$email", original: { $push: "$$ROOT" } } },
       {
         $group: {
           _id:
@@ -154,7 +167,7 @@ export const getListInforUser = async (
     }, 0);
 
     try {
-      await disconnectDatabase();
+      await disconnectDatabase(db);
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: MESSAGE_ERROR.DISCONNECT_ERROR_DB });
@@ -166,19 +179,22 @@ export const getListInforUser = async (
       totalUser: totalAccount[0].count,
       listAmountVector: listAmountVector,
       listTimeVector: listTimeVector,
+      status: true,
     });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: MESSAGE_ERROR.GET_LIST_INFOR_USER });
   }
 };
+
 export const getListInforCitizenUser = async (
   req: NextApiRequest,
   res: NextApiResponse
 ) => {
+  let db: Connection;
   try {
     try {
-      await connectDatabase();
+      db = await connectDatabase(DATABASE.USER_STATIC);
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: MESSAGE_ERROR.CONNECT_ERROR_DB });
@@ -186,7 +202,7 @@ export const getListInforCitizenUser = async (
     }
 
     try {
-      await disconnectDatabase();
+      await disconnectDatabase(db);
     } catch (error) {
       console.log(error);
       res.status(500).json({ message: MESSAGE_ERROR.DISCONNECT_ERROR_DB });

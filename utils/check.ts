@@ -2,6 +2,7 @@ import { compact, isEmpty, isUndefined, toArray } from "lodash";
 import mongoose, { Model } from "mongoose";
 import { arrayToStringArray, removeDuplicate } from "./convert";
 import { MESSAGE_ERROR } from "../constraints/db";
+import { IUserRole, USER_ROLE } from "../interfaces/enum";
 
 export const dataCheck = (data: any, convertData: any, defaultData?: any) => {
   if (isUndefined(data) || isEmptyObject(data)) {
@@ -73,4 +74,22 @@ export const checkExistsObjectId = async (
     return [];
   }
   return [];
+};
+
+export const checkRoleAccount = (
+  roles: IUserRole[],
+  rolesDesire: IUserRole[]
+) => {
+  const roleValid: string[] = [];
+  if (roles.length !== 0) {
+    roles.forEach((role) => {
+      if (Object.values(USER_ROLE).includes(role as USER_ROLE)) {
+        if (rolesDesire.includes(role)) {
+          roleValid.push(role);
+        }
+      }
+    });
+  }
+
+  return roleValid;
 };
