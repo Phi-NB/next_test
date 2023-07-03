@@ -194,6 +194,68 @@ export const getListInforCitizenUser = async (
   res: NextApiResponse
 ) => {
   let db: Connection;
+
+  const schema = Joi.object({
+    limit: Joi.string().min(1).max(1000).required(),
+    offset: Joi.string().min(1).max(1000).required(),
+  });
+
+  try {
+    await schema.validateAsync(req.query);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: MESSAGE_ERROR.VALIDATE, error: error });
+  }
+
+  const { offset, limit } = req.query;
+
+  let responseValidateAccount: IResponseValidateAccount | void;
+
+  try {
+    db = await connectDatabase(DATABASE.AUTH);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: MESSAGE_ERROR.CONNECT_ERROR_DB });
+    return;
+  }
+
+  // try {
+  //   responseValidateAccount = await middlewareAuth(req, res);
+  // } catch (error) {
+  //   res.status(500).json({ message: MESSAGE_ERROR.VALIDATE, status: false });
+  // }
+
+  // try {
+  //   if (responseValidateAccount instanceof Object) {
+  //     if (responseValidateAccount.status) {
+  //       const role = middlewareCheckRole(
+  //         res,
+  //         responseValidateAccount.currentAccount.roles,
+  //         [USER_ROLE.ROOT_ADMIN]
+  //       );
+  //     }
+  //   } else {
+  //     res
+  //       .status(500)
+  //       .json({ message: MESSAGE_ERROR.ROLE_INVALID, status: false });
+  //   }
+  // } catch (error) {
+  //   res
+  //     .status(500)
+  //     .json({ message: MESSAGE_ERROR.ROLE_INVALID, status: false });
+  // }
+
+  const user = db.models.users || db.model(COLLECTION.USER, UserSchema);
+
+  const listInforCitizen = await user.aggregate([
+    { $match: { email: { $ne: null } } },
+    { $group: { _id: "$email", citizen: { $sum: 1 } } },
+    { $skip: Number(offset) },
+    { $limit: Number(limit) },
+  ]);
+
+  console.log(listInforCitizen);
+
   try {
     try {
       db = await connectDatabase(DATABASE.USER_STATIC);

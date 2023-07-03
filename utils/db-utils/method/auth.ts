@@ -93,8 +93,6 @@ export const login = async (rep: NextApiRequest, res: NextApiResponse) => {
       });
     }
 
-    console.log(tokenRes.data.message);
-
     if (tokenRes.status !== 200 || !tokenRes.data?.data) {
       return res.status(500).json({
         status: false,
@@ -105,6 +103,7 @@ export const login = async (rep: NextApiRequest, res: NextApiResponse) => {
     const account = await validateAccessToken(accessToken);
 
     db = await connectDatabase(DATABASE.AUTH);
+
     const user = db.models.users || db.model(COLLECTION.USER, UserSchema);
 
     let roles: IUserRole[] = [USER_ROLE.USER];
