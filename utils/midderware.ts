@@ -26,8 +26,6 @@ export const middlewareAuth = async (
     const token: string = bearer[1];
     const response = await validateAccount({ accessToken: token });
 
-    // console.log(response?.data?.data);
-
     if (response.statusCode !== StatusCodes.OK) {
       res.status(500).json({
         statusCode: StatusCodes.UNAUTHORIZED,

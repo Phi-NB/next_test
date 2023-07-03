@@ -33,6 +33,7 @@ export interface IAccountCitizen {
 
 export const validateAccessToken = async (accessToken: string) => {
   let account: IAccount;
+
   try {
     account = (await verifyTokenWithJson(accessToken)) as IAccount;
   } catch (error) {
@@ -40,6 +41,7 @@ export const validateAccessToken = async (accessToken: string) => {
       throw new Error(MESSAGE_ERROR.TOKEN_EXPIRED);
     }
   }
+
   let citizen: ICurrentCitizen;
   try {
     citizen = (await getActiveCitizen(accessToken)) as ICurrentCitizen;
@@ -55,10 +57,12 @@ export const validateAccessToken = async (accessToken: string) => {
 
 export const getActiveCitizen = async (accessToken: string) => {
   const response = await requestGetCurrentActiveCitizen({ accessToken });
+  console.log("response", response);
   if (response.status !== 200 || !response.data?.data) {
     throw new Error(MESSAGE_ERROR.EXPECTATION_FAILED);
   }
   const citizen = response.data?.data;
+
   return citizen;
 };
 

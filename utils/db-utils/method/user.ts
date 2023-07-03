@@ -56,6 +56,8 @@ export const getListInforUser = async (
     res.status(500).json({ message: MESSAGE_ERROR.VALIDATE, status: false });
   }
 
+  // console.log(responseValidateAccount);
+
   try {
     if (responseValidateAccount instanceof Object) {
       if (responseValidateAccount.status) {
